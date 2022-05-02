@@ -1,13 +1,52 @@
+# !pip install selenium
+# !pip install bs4
+# !pip install webdriver_manager
+# !pip install requests
+
+
 from bs4 import BeautifulSoup
 import requests
 import csv
+import re
+import time
+from requests_html import HTMLSession # https://github.com/psf/requests-html
+import json
+import unicodedata
+
+'''
+On cherche par rapport au nom de famille, les noms de famille de naissance sont utilisés. Il faut donc regarder le lieu de naissance des enfants pour savoir si la famille à bouger (suivie le/la partenaire).
+
+Il faudrait arriver à trouver l'ancêtre le plus loin pour un nom de famille, puis analyser sa descendance :
+Pour chaque enfant : 
+    - Si c'est un garcon ou une fille on récupère les informations nescessaires + récupération des informations de l'épouse/époux
+    - Si c'est un garcon on analysera la descendance
 
 
-url = "https://www.geneanet.org/fonds/individus/?go=1&nom=martin&prenom=fran%C3%A7ois&prenom_operateur=or&with_variantes_nom=&with_variantes_nom_conjoint=&with_variantes_prenom=&with_variantes_prenom_conjoint=&size=10"
+Informations à récupérer pour chaque personne :
+ - Genre
+ - Nom
+ - Prénom
+ - Date naissance
+ - Lieu de naissance
+ - Date mort
+ - Lieu de mort
 
 
-def traitementURL(nom="",prenom="",):
-    url = "https://www.geneanet.org/fonds/individus/?go=1&nom=" + nom + "&prenom=" + prenom + "&prenom_operateur=or&with_variantes_nom=&with_variantes_nom_conjoint=&with_variantes_prenom=&with_variantes_prenom_conjoint=&size=10" 
+Visualisation (folium):
+ - Sur une carte qui s'actualise tous les 10 ans, on affiche les naissances et les morts aux endroits correspondants
+
+Avec le lieu de naissance de toute la famille, on peut voir comment ils se sont déplacé au fil des ans.
+
+Améliorations :
+
+Utilisation du lieu de mort, du lieu de certains événements, des informations des époux/épouses
+'''
+
+
+# Futur fonction à utiliser (pour saisie du nom prenom et création de l'url correspondante)
+def traitementURL():
+    nom, prenom = getNomPrenom()
+    url = "https://www.geneanet.org/fonds/individus/?go=1&nom=" + nom + "&prenom=&prenom_operateur=or&with_variantes_nom=&with_variantes_nom_conjoint=&with_variantes_prenom=&with_variantes_prenom_conjoint=&size=10" 
     return url 
 
 def getNomPrenom():
@@ -15,68 +54,262 @@ def getNomPrenom():
     prenom = input("Saisir prénom")
     return nom, prenom
 
+# Url de recherche de test
+url = "https://www.geneanet.org/fonds/individus/?go=1&nom=martin&prenom=fran%C3%A7ois&prenom_operateur=or&with_variantes_nom=&with_variantes_nom_conjoint=&with_variantes_prenom=&with_variantes_prenom_conjoint=&size=10"
+
+# Récupération du code html
+def getSoup(url):
+    request = requests.get(url)
+    soup = BeautifulSoup(request.content, 'html.parser')
+    return soup
+
+url = "https://www.geneanet.org/fonds/individus/?go=1&nom=martin&page=1&prenom=fran%C3%A7ois&prenom_operateur=or&size=10&with_variantes_nom=&with_variantes_nom_conjoint=&with_variantes_prenom=&with_variantes_prenom_conjoint="
+
+def getAllArbreUrl(url):
+    # Récupération du code html
+    soup = getSoup(url)
+
+    # Récupération de la div contenant toutes les urls en lien avec la recherche
+    resOnly = soup.find("div", {"id":"table-resultats"})
+    # print(resOnly)
+
+    allArbreUrl = []
+    # Récupération des urls
+    for a in resOnly.find_all('a'):
+        try:
+            if (re.search("^arbres_utilisateur", a["data-id-es"])):  #^arbres_utilisateur
+                allArbreUrl.append(a["href"])
+        except:
+            ""
+    print(allArbreUrl) # Comporte l'url des pages utilisateurs si se sont des arbres utilisateurs
+
+# getAllArbreUrl(url)
 
 
+# Récupération des ascendants (remonter facilement à l'ancetre)
+def getUrlDerAscendant(url):
+    session = HTMLSession()
+    r = session.get(url)
+    soup = BeautifulSoup(r.html.html, 'html.parser')
+    # Récupération du dernier ascendants
+    # print(soup)
+    urlDerAscendant = url
+    try: 
+        arbreGene =  soup.find("td", {"id":"ancestors"})
+        derAscendant = arbreGene.find("a")["href"]
+        urlDerAscendant = "https://gw.geneanet.org/" + derAscendant
+        urlDerAscendant = getUrlDerAscendant(urlDerAscendant)
+        
+    except:
+        print("Pas d'autre ascendant")
 
+    return urlDerAscendant
 
-source = requests.get(url).text
+def getDataUrl(url):
+    print(url)
 
+    session = HTMLSession()
+    r = session.get(url)
+    soup = BeautifulSoup(r.html.html, 'html.parser')
 
-soup = BeautifulSoup(source, 'lxml')
+    personne = {}
 
-resOnly = soup.find("div", {"id":"table-resultats"})
-# print(resOnly)
+    personne["url"] = url
+    
+    # Récupération de l'html de l'ensemble des données d'une personne
+    person_html = soup.find("div", {"id":"perso"})
 
-for a in resOnly.find_all('a'):
-    print(a['href'])
-    print(a["data-id-es"])
-    # headline = a.text-large
-    # print(headline)
-
-
-
-res = soup.find("div", {"id":"content"})
-
-for h1 in res.find_all('h1'):
-    print(h1.with_tabs.name)
-test = soup.find("div", class_="text-large")
-
-
-
-
-
-
-
-'''
-for article in soup.find_all('article'):
-    headline = article.h2.a.text
-    print(headline)
-
-    summary = article.find('div', class_='entry-content').p.text
-    print(summary)
+    # Récupération des données concernant la personne (genre, nom, prenom)
+    person_title = person_html.find("div", {"id":"person-title"})
+    person_title = person_title.find("h1")
 
     try:
-        vid_src = article.find('iframe', class_='youtube-player')['src']
+        personne["genre"] = person_title.find("img")["title"]
+    except:
+        personne["genre"] = None
+    
+    try:
+        nomprenom = person_title.find_all("a")
+        #nom_traite = unicodedata.normalize('NFD', nomprenom[0].text)
+        personne["nom"] = unicodedata.normalize('NFD', nomprenom[1].text).encode('ascii', 'ignore').decode('utf-8')
+        #prenom_traite = unicodedata.normalize('NFD', nomprenom[1].text)
+        personne["prenom"] = unicodedata.normalize('NFD', nomprenom[0].text).encode('ascii', 'ignore').decode('utf-8')
+    except:
+        personne["nom"] = unicodedata.normalize('NFD', person_title.text).encode('ascii', 'ignore').decode('utf-8')
+        personne["prenom"] = ""
 
-        vid_id = vid_src.split('/')[4]
-        vid_id = vid_id.split('?')[0]
+    # Récupération des données concernant la personne (ddm, ldm, ddm, ldm)
+    person_data_perso = person_html.find("ul")
 
-        yt_link = f'https://youtube.com/watch?v={vid_id}'
-    except Exception as e:
-        yt_link = None
+    ldn = ""
+    ldm = ""
 
-    print(yt_link)
+    personne["ddn"] = ""
+    personne["ddm"] = ""
 
-    print()
+    for li in person_data_perso.findAll("li"):
+        li = li.text
+
+        try:
+            personne["ddn"] = re.findall("[0-9]{4}", re.findall("Né.*", li)[0])[0]
+        except:
+            ""
+        try:
+            personne["ddm"] = re.findall("[0-9]{4}", re.findall("Décédé.*", li)[0])[0]
+        except:
+            ""
+        try:
+            ldn = re.findall("à [- '\w+]*", re.findall("Né.*", li)[0])[0].replace("à ", "")
+        except:
+            ""
+        try:
+            ldn = re.findall("- [- '\w+]*", re.findall("Né.*", li)[0])[0].replace("- ", "").replace("à ","")
+        except:
+            ""
+        try:
+            ldm = re.findall("à [- '\w+]*", re.findall("Décédé.*", li)[0])[0].replace("à ", "")
+        except:
+            ""
+        try:
+            ldm = re.findall("- [- '\w+]*", re.findall("Décédé.*", li)[0])[0].replace("- ", "").replace("à ","")
+        except:
+            ""
+
+    personne["ldn"] = unicodedata.normalize('NFD', ldn).encode('ascii', 'ignore').decode('utf-8')
+    personne["ldm"] = unicodedata.normalize('NFD', ldm).encode('ascii', 'ignore').decode('utf-8')
+    
+    # date_naissance = person_data_perso.find("li").text
+    # print(date_naissance)
+    # print(re.search("Né le .* -", date_naissance))
+    
+    
+    # Récupération des parents
+    personne["pere"] = ""
+    personne["mere"] = ""
+    try:
+        span_parent = person_html.find(text="Parents")
+        h2_parent = span_parent.parent
+        parents_data = h2_parent.findNext("ul")
+        # parents_data = person_html.find("div", {"id":"parents"})
+        # print(parents_data.find_all("a")[0]["href"])
+        personne["pere"] = parents_data.findAll("a")[0].text
+        personne["mere"] = parents_data.findAll("a")[1].text
+    except:
+        print("Erreur parents")
+
+    # print(personne)
+    return personne, person_html
+
+    
+def GetAllData(allperson, currenturl, getCurrentPers = True):
+
+    personne, person_html = getDataUrl(currenturl)
+    # print("soup" + str(person_html))
+    if(getCurrentPers):
+        allperson.append(personne)
+        
+    person_union = person_html.find("ul", {"class":"fiche_union"})
+
+    try:
+        person_epoux = person_union.findChildren("li" , recursive=False)
+
+        for epoux_link in person_epoux:
+            children = epoux_link.find_all("li")
+            epoux, epoux_html = getDataUrl("https://gw.geneanet.org/" + epoux_link.find("a")["href"])
+            allperson.append(epoux)
+            
+            try:
+                for child_link in children:
+                    url = "https://gw.geneanet.org/" + child_link.find("a")["href"]
+                    child, child_html = getDataUrl(url)
+                    allperson.append(child)
+                    if(child["genre"] == "H"):
+                        allperson = GetAllData(allperson, child["url"], getCurrentPers = False)
+                        
+            except:
+                print("Err Children")
+    except:
+        print("Err Epoux")
+
+    return allperson
+
+def CompleteData(data):
+    for pers in data:
+        pere = {}
+        
+        if(pers["pere"] != ""):
+            if(pers["ddn"] == "" or pers["ddm"] == "" or pers["ldn"] == "" or pers["ldm"] == ""):
+                for pers2 in data:
+                    if(pers["pere"] == pers2["nom"] + " " + pers2["prenom"]):
+                        pere = pers2
+            try:
+                # Si pers n'a pas de ddn : on la set a la moitier de la vie du pere
+                if(pers["ddn"] == "" and pere["ddn"] != "" and pere["ddm"] != ""):
+                    pers["ddn"] = str((int(pere["ddm"]) - int(pere["ddn"])) / 2 + int(pere["ddn"]))
+                # Si pers n'a pas de ddm : on la set a la ddn + 80
+                if(pers["ddm"] == "" and pere["ddn"] != "" and pere["ddm"] != ""):
+                    pers["ddm"] = str(int(pers["ddn"]) + 80)
+                # Si pers n'a pas de ldn : on la set au ldn du pere
+                if(pers["ldn"] == "" and pere["ldn"] != ""):
+                    pers["ldn"] = pere["ldn"]
+                # Si pers n'a pas de ldn : on la set au ldn du pere
+                if(pers["ldm"] == "" and pers["ldn"] != ""):
+                    pers["ldm"] = pers["ldn"]
+            except:
+                pass
+    return data
 
 
-csv_file = open('fichier.csv', 'w')
+# Récupération du code source de chaque url correspondant à une personne
+urlDerAscendant = ""
 
-csv_writer = csv.writer(csv_file)
-csv_writer.writerow(['headline', 'summary', 'video_link'])
+# Lancement du scraping ---------------------------------------------------------------------------------------------------------
 
-csv_writer.writerow([headline, summary, yt_link])
+nom = "Pascal"
+# for url in allArbreUrl:
+for i in range(1):
+    url = "https://gw.geneanet.org/jgcuaz?n=martin&oc=2&p=balthasard"
+    # url = "https://gw.geneanet.org/dulaurentdelaba?n=bonaparte&oc=&p=napoleon+1er"
+    print("url de base : " + url)
+    data = []
+    urls = []
+    
+    urlDerAscendant = getUrlDerAscendant(url)
+    print("Url dernier ascendant : " + urlDerAscendant)
+    '''
+    urls = getAllUrls(urls, urlDerAscendant)
+    print(len(urls))
+    
+    for u in urls:
+        data.append(getDataUrl(u))
+    '''
+    data = GetAllData(data, urlDerAscendant)
+    
+    print(data)
+
+    data = CompleteData(data)
+
+    with open('dataSet' + nom + '.json', 'w+') as outfile:
+        json.dump(data, outfile)
+
+print(len(data))
 
 
-csv_file.close()
-'''
+
+
+
+def testLdn():
+    test = """Né vers 1619 - à Souvert (commune de Chissey en Morvan ou Lucenay l'Evèque)"""
+
+    try:
+        res = re.findall("à [ '\w+]*", test)[0].replace("à ", "")
+    except:
+        ""
+
+    try:
+        res = re.findall("- [ '\w+]*", test)[0].replace("- ", "").replace("à ","")
+    except:
+        ""
+    print(res)
+
+# testLdn()
