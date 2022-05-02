@@ -54,16 +54,12 @@ def getNomPrenom():
     prenom = input("Saisir prénom")
     return nom, prenom
 
-# Url de recherche de test
-url = "https://www.geneanet.org/fonds/individus/?go=1&nom=martin&prenom=fran%C3%A7ois&prenom_operateur=or&with_variantes_nom=&with_variantes_nom_conjoint=&with_variantes_prenom=&with_variantes_prenom_conjoint=&size=10"
-
 # Récupération du code html
 def getSoup(url):
     request = requests.get(url)
     soup = BeautifulSoup(request.content, 'html.parser')
     return soup
 
-url = "https://www.geneanet.org/fonds/individus/?go=1&nom=martin&page=1&prenom=fran%C3%A7ois&prenom_operateur=or&size=10&with_variantes_nom=&with_variantes_nom_conjoint=&with_variantes_prenom=&with_variantes_prenom_conjoint="
 
 def getAllArbreUrl(url):
     # Récupération du code html
@@ -94,12 +90,23 @@ def getUrlDerAscendant(url):
     # Récupération du dernier ascendants
     # print(soup)
     urlDerAscendant = url
+
+   
     try: 
         arbreGene =  soup.find("td", {"id":"ancestors"})
         derAscendant = arbreGene.find("a")["href"]
-        urlDerAscendant = "https://gw.geneanet.org/" + derAscendant
+
+        # Condition si le plus vieil ascendant est un ascendant direct de quelqu'un de celèbre
+        if ("m=RL" in derAscendant):
+            newDerAscendant = arbreGene.findAll("a")
+            urlDerAscendant = "https://gw.geneanet.org/" + newDerAscendant[1]["href"]
+        
+        else:
+            urlDerAscendant = "https://gw.geneanet.org/" + derAscendant
+
         urlDerAscendant = getUrlDerAscendant(urlDerAscendant)
         
+
     except:
         print("Pas d'autre ascendant")
 
@@ -214,7 +221,7 @@ def GetAllData(allperson, currenturl, getCurrentPers = True):
         person_epoux = person_union.findChildren("li" , recursive=False)
 
         for epoux_link in person_epoux:
-            children = epoux_link.find_all("li")
+            children = epoux_link.findChildren("li", recursive=False)
             epoux, epoux_html = getDataUrl("https://gw.geneanet.org/" + epoux_link.find("a")["href"])
             allperson.append(epoux)
             
@@ -263,12 +270,13 @@ def CompleteData(data):
 # Récupération du code source de chaque url correspondant à une personne
 urlDerAscendant = ""
 
-# Lancement du scraping ---------------------------------------------------------------------------------------------------------
+# -------------------------- Lancement du scraping -------------------------- #
 
-nom = "Pascal"
+nom = "Leenhardt"
 # for url in allArbreUrl:
 for i in range(1):
-    url = "https://gw.geneanet.org/jgcuaz?n=martin&oc=2&p=balthasard"
+    #url = "https://gw.geneanet.org/jgcuaz?n=martin&oc=2&p=balthasard"
+    url = "https://gw.geneanet.org/leenhardt?n=leenhardt&oc=&p=micheline"
     # url = "https://gw.geneanet.org/dulaurentdelaba?n=bonaparte&oc=&p=napoleon+1er"
     print("url de base : " + url)
     data = []
@@ -296,6 +304,10 @@ print(len(data))
 
 
 
+
+
+
+# ----------------------------------- Test ----------------------------------- #
 
 
 def testLdn():
