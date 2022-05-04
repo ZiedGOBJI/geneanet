@@ -11,11 +11,12 @@ from plotly.subplots import make_subplots
 from geopy.geocoders import Nominatim
 import csv
 import json
+import random
 
 annees =[]
 
 # récupération des données
-with open('dataSetPascal.json') as json_data:
+with open('dataSetMartin.json') as json_data:
     data = json.load(json_data) # type = list
 
 
@@ -67,14 +68,17 @@ for dict in data:
   except:
     pass
 
+  # introduction d'un bruitx et d'un bruity afin d'empêcher la superposition des individus
+  bruitx = random.uniform(-0.006,0.006)
+  bruity = random.uniform(-0.006,0.006)
   for k in range(int(min(annees)),int(max(annees))+1):
     data_pers["datetime"][c] = str(k)
     data_pers["etat"][c] = ""
 
     try:
       if(k >= int(dict["ddn"])):
-        data_pers["lat"][c] = str(ville_naissance.latitude)
-        data_pers["lon"][c] = str(ville_naissance.longitude)
+        data_pers["lat"][c] = str(ville_naissance.latitude + bruitx)
+        data_pers["lon"][c] = str(ville_naissance.longitude + bruity)
         data_pers["etat"][c] = "Naissance"
         #print(dict["ldn"] + " : " + str(ville_naissance.latitude) + " " + str(ville_naissance.longitude))
     except:
@@ -82,8 +86,8 @@ for dict in data:
 
     try:
       if(k >= int(dict["ddm"])):
-        data_pers["lat"][c] = str(ville_mort.latitude)
-        data_pers["lon"][c] = str(ville_mort.longitude)
+        data_pers["lat"][c] = str(ville_mort.latitude + bruitx)
+        data_pers["lon"][c] = str(ville_mort.longitude + bruity)
         data_pers["etat"][c] = "Mort"
         #print(dict["ldm"] + " : " + str(ville_mort.latitude) + " " + str(ville_mort.longitude))
     except:
@@ -134,7 +138,7 @@ fig2 = px.scatter_geo(df,
 fig.add_trace(fig2.data[0])
 
 
-fig.write_html("./Confirmed.html")
+fig.write_html("./MapMartin.html")
 fig.show()
 
 
