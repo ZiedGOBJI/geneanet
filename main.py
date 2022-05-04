@@ -94,11 +94,22 @@ def getUrlDerAscendant(url):
    
     try: 
         arbreGene =  soup.find("td", {"id":"ancestors"})
-        derAscendant = arbreGene.find("a")["href"]
+        trDerAscendant = arbreGene.findAll("tr")
+        derAscendant = None
+        cpt = 0
 
+        while(derAscendant == None):
+            tdDerAscendant = trDerAscendant[cpt*4].findAll("td")
+            if(re.findall(r'colspan', str(tdDerAscendant[0])) == []):
+                derAscendant = trDerAscendant[cpt*4].find("a")["href"]
+            else:
+                cpt += 1
+        
+
+        
         # Condition si le plus vieil ascendant est un ascendant direct de quelqu'un de celèbre
         if ("m=RL" in derAscendant):
-            newDerAscendant = arbreGene.findAll("a")
+            newDerAscendant = trDerAscendant[cpt*4].findAll("a")
             urlDerAscendant = "https://gw.geneanet.org/" + newDerAscendant[1]["href"]
         
         else:
@@ -199,8 +210,8 @@ def getDataUrl(url):
         parents_data = h2_parent.findNext("ul")
         # parents_data = person_html.find("div", {"id":"parents"})
         # print(parents_data.find_all("a")[0]["href"])
-        personne["pere"] = parents_data.findAll("a")[0].text
-        personne["mere"] = parents_data.findAll("a")[1].text
+        personne["pere"] = unicodedata.normalize('NFD', parents_data.findAll("a")[0].text).encode('ascii', 'ignore').decode('utf-8')
+        personne["mere"] = unicodedata.normalize('NFD', parents_data.findAll("a")[1].text).encode('ascii', 'ignore').decode('utf-8')
     except:
         print("Erreur parents")
 
@@ -221,7 +232,8 @@ def GetAllData(allperson, currenturl, getCurrentPers = True):
         person_epoux = person_union.findChildren("li" , recursive=False)
 
         for epoux_link in person_epoux:
-            children = epoux_link.findChildren("li", recursive=False)
+            ul_child = epoux_link.find("ul")
+            children = ul_child.findChildren("li", recursive=False)
             epoux, epoux_html = getDataUrl("https://gw.geneanet.org/" + epoux_link.find("a")["href"])
             allperson.append(epoux)
             
