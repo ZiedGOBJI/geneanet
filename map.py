@@ -15,8 +15,10 @@ import random
 
 annees =[]
 
+dataName = "Martin"
+
 # récupération des données
-with open('dataSetMartin.json') as json_data:
+with open('dataSet' + dataName + '.json') as json_data:
     data = json.load(json_data) # type = list
 
 
@@ -54,7 +56,7 @@ geocoder = Nominatim(user_agent="http")
 c = 0
 lendata = len(data)
 for dict in data:
-  print(str((data.index(dict)*100)/lendata) + "%")
+  print(str(round((data.index(dict)*100)/lendata),2) + "%")
   ville_naissance = ""
   ville_mort = ""
   try:
@@ -138,7 +140,7 @@ fig2 = px.scatter_geo(df,
 fig.add_trace(fig2.data[0])
 
 
-fig.write_html("./MapMartin.html")
+fig.write_html("./Map" + dataName + ".html")
 fig.show()
 
 

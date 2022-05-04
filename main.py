@@ -12,6 +12,7 @@ import time
 from requests_html import HTMLSession # https://github.com/psf/requests-html
 import json
 import unicodedata
+import random
 
 '''
 On cherche par rapport au nom de famille, les noms de famille de naissance sont utilisés. Il faut donc regarder le lieu de naissance des enfants pour savoir si la famille à bouger (suivie le/la partenaire).
@@ -262,20 +263,30 @@ def CompleteData(data):
                     if(pers["pere"] == pers2["nom"] + " " + pers2["prenom"]):
                         pere = pers2
             try:
-                # Si pers n'a pas de ddn : on la set a la moitier de la vie du pere
-                if(pers["ddn"] == "" and pere["ddn"] != "" and pere["ddm"] != ""):
-                    pers["ddn"] = str((int(pere["ddm"]) - int(pere["ddn"])) / 2 + int(pere["ddn"]))
-                # Si pers n'a pas de ddm : on la set a la ddn + 80
-                if(pers["ddm"] == "" and pere["ddn"] != "" and pere["ddm"] != ""):
-                    pers["ddm"] = str(int(pers["ddn"]) + 80)
+                # Si pers n'a pas de ddn : on la set a ddn du pere + [20,40]
+                if(pers["ddn"] == "" and pere["ddn"] != ""):
+                    pers["ddn"] = str(int(pere["ddn"]) + random.randint(20,40))
                 # Si pers n'a pas de ldn : on la set au ldn du pere
                 if(pers["ldn"] == "" and pere["ldn"] != ""):
                     pers["ldn"] = pere["ldn"]
-                # Si pers n'a pas de ldn : on la set au ldn du pere
-                if(pers["ldm"] == "" and pers["ldn"] != ""):
-                    pers["ldm"] = pers["ldn"]
+                # Si pers n'a pas de ldn : on la set au ldm du pere
+                if(pers["ldn"] == "" and pere["ldm"] != ""):
+                    pers["ldn"] = pere["ldm"]
             except:
                 pass
+            # Si pers n'a pas de ddm : on la set a la ddn + [65,85]
+            if(pers["ddm"] == "" and pers["ddn"] != ""):
+                pers["ddm"] = str(int(pers["ddn"]) + random.randint(65,85))
+            # Si pers n'a pas de ddn mais ddm : on la set a la ddm - [65,85]
+            if(pers["ddn"] == "" and pers["ddm"] != ""):
+                pers["ddn"] = str(int(pers["ddm"]) - random.randint(65,85))
+            # Si pers n'a pas de ldm : on la set au ldn
+            if(pers["ldm"] == "" and pers["ldn"] != ""):
+                pers["ldm"] = pers["ldn"]
+            # Si pers n'a pas de ldn : on la set au ldm
+            if(pers["ldn"] == "" and pers["ldm"] != ""):
+                pers["ldn"] = pers["ldm"]
+
     return data
 
 
