@@ -15,7 +15,7 @@ import random
 
 annees =[]
 
-dataName = "Martin"
+dataName = "Leenhardt"
 
 # récupération des données
 with open('dataSet' + dataName + '.json') as json_data:
@@ -56,7 +56,7 @@ geocoder = Nominatim(user_agent="http")
 c = 0
 lendata = len(data)
 for dict in data:
-  print(str(round((data.index(dict)*100)/lendata),2) + "%")
+  print(str(round(((data.index(dict)*100)/lendata),2)) + "%")
   ville_naissance = ""
   ville_mort = ""
   try:
