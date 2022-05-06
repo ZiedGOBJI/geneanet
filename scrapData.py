@@ -45,15 +45,10 @@ Utilisation du lieu de mort, du lieu de certains événements, des informations 
 
 
 # Futur fonction à utiliser (pour saisie du nom prenom et création de l'url correspondante)
-def traitementURL():
-    nom, prenom = getNomPrenom()
+def traitementURL(nom):
     url = "https://www.geneanet.org/fonds/individus/?go=1&nom=" + nom + "&prenom=&prenom_operateur=or&with_variantes_nom=&with_variantes_nom_conjoint=&with_variantes_prenom=&with_variantes_prenom_conjoint=&size=10" 
     return url 
 
-def getNomPrenom():
-    nom = input("Saisir nom")
-    prenom = input("Saisir prénom")
-    return nom, prenom
 
 # Récupération du code html
 def getSoup(url):
@@ -62,7 +57,7 @@ def getSoup(url):
     return soup
 
 
-def getAllArbreUrl(url):
+def getArbreUrl(url):
     # Récupération du code html
     soup = getSoup(url)
 
@@ -70,17 +65,16 @@ def getAllArbreUrl(url):
     resOnly = soup.find("div", {"id":"table-resultats"})
     # print(resOnly)
 
-    allArbreUrl = []
+    arbreUrl = ""
     # Récupération des urls
     for a in resOnly.find_all('a'):
         try:
             if (re.search("^arbres_utilisateur", a["data-id-es"])):  #^arbres_utilisateur
-                allArbreUrl.append(a["href"])
+                arbreUrl.a["href"]
+                break
         except:
             ""
-    print(allArbreUrl) # Comporte l'url des pages utilisateurs si se sont des arbres utilisateurs
-
-# getAllArbreUrl(url)
+    return arbreUrl # Comporte l'url des pages utilisateurs si se sont des arbres utilisateurs
 
 
 # Récupération des ascendants (remonter facilement à l'ancetre)
@@ -293,16 +287,17 @@ def CompleteData(data):
     return data
 
 
-# Récupération du code source de chaque url correspondant à une personne
-urlDerAscendant = ""
+
 
 # -------------------------- Lancement du scraping -------------------------- #
 
 nom = "Leenhardt"
-# for url in allArbreUrl:
-for i in range(1):
+def scrapDataFromUrl(url):
+    
+    # for i in range(1):# Récupération du code source de chaque url correspondant à une personne
+    urlDerAscendant = ""
     #url = "https://gw.geneanet.org/jgcuaz?n=martin&oc=2&p=balthasard"
-    url = "https://gw.geneanet.org/leenhardt?n=leenhardt&oc=&p=micheline"
+    # url = "https://gw.geneanet.org/leenhardt?n=leenhardt&oc=&p=micheline"
     # url = "https://gw.geneanet.org/dulaurentdelaba?n=bonaparte&oc=&p=napoleon+1er"
     print("url de base : " + url)
     data = []
@@ -326,7 +321,7 @@ for i in range(1):
     with open('dataSet' + nom + '.json', 'w+') as outfile:
         json.dump(data, outfile)
 
-print(len(data))
+    print(len(data))
 
 
 
