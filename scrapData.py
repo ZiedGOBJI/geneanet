@@ -277,6 +277,9 @@ def CompleteData(data):
             # Si pers n'a pas de ddm : on la set a la ddn + [65,85]
             if(pers["ddm"] == "" and pers["ddn"] != ""):
                 pers["ddm"] = str(int(pers["ddn"]) + random.randint(65,85))
+                #Si la date de mort prévue est après 2022, on ne l'initialise pas (on ne prédit pas le futur)
+                if (pers["ddm"] > 2022):
+                    pers["ddm"] = ""
             # Si pers n'a pas de ddn mais ddm : on la set a la ddm - [65,85]
             if(pers["ddn"] == "" and pers["ddm"] != ""):
                 pers["ddn"] = str(int(pers["ddm"]) - random.randint(65,85))
