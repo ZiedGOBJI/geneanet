@@ -4,10 +4,13 @@
 <head>
     <title>Visualisation déplacement</title> 
     <meta charset=utf-8>
-    
+    <style id="plotly.js-style-global"></style>
+    <style id="plotly.js-style-modebar-aa6ffc"></style>
+    <!-- 
     <script type="module" src="{{ url_for('static', filename='moduletest.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='mapList.js') }}"></script>
-    
+     -->
+
 </head>
 <body>
     <h1>Visualisation des déplacements avant le 20ème siècle</h1>        
@@ -16,32 +19,46 @@
             <p>Veuillez saisir le nom ou l'url de la personne choisie</p>
             <form id="FormDataScrap" method="post" action=".">
                 <p>
-                    Nom : <input name="nom" type="text" placeholder="Nom">
+                    Nom : <input required name="nom" type="text" id="nom" placeholder="Nom"> *
                 </p>
                 <p>
-                    Url : <input name="url" type="text" placeholder=" https://www.geneanet.com/...">
+                    Url : <input name="url" type="text" id="url" placeholder="https://www.geneanet.com/...">
                 </p>
-                <input type="submit" value = "Recupérer les données">
+                <input type="submit" value="Recupérer les données">
             </form>
+            <p id="msgFormScrap"></p>
+            {% if msgForm %}
+            {{msgForm}}
+            {% endif %}
+
+            
         </div>
 
         <div id="NavAccesMap">
             <p>Accès aux cartes déjà créées</p>
             <ul id="mapList">
                 {% for item in subfolders %}
-                    <a href="/{{ item }}"><li> {{ item }} </li></a>
+                    <a  href="/{{ item }}"><li> {{ item }} </li></a>
                 {% endfor %}
             </ul>
         </div>
     </section>
 
     <section>
-        <button><a href="/{{name}}">Afficher la carte</a></button>
-    </section>
-    {% if name %}
+        {% if name %}
         <p>{{name}} est séléctionné(e) </p>
-        <include src="./templates/map/{{name}}/Map{{name}}.html"></include>
-    {%else %}
-        <p>Pas de personne séléctionnée</p>
-    {% endif %}
+        <div id="map">
+            {% if name in subfolders %}
+            {% include './map/' + name + '/Map' + name + '.html' %}
+            {% endif %}
+        </div>
+        {%else %}
+            <p>Pas de personne séléctionnée</p>
+        {% endif %}
+
+        
+        
+        
+        
+    </section>
 </body>

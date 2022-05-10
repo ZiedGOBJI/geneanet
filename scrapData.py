@@ -58,6 +58,7 @@ def getSoup(url):
 
 
 def getArbreUrl(url):
+    print("arbre url 1" + url)
     # Récupération du code html
     soup = getSoup(url)
 
@@ -70,10 +71,11 @@ def getArbreUrl(url):
     for a in resOnly.find_all('a'):
         try:
             if (re.search("^arbres_utilisateur", a["data-id-es"])):  #^arbres_utilisateur
-                arbreUrl.a["href"]
+                arbreUrl = a["href"]
                 break
         except:
             ""
+    print("arbre url 2" + arbreUrl)
     return arbreUrl # Comporte l'url des pages utilisateurs si se sont des arbres utilisateurs
 
 
@@ -272,7 +274,7 @@ def CompleteData(data):
             if(pers["ddm"] == "" and pers["ddn"] != ""):
                 pers["ddm"] = str(int(pers["ddn"]) + random.randint(65,85))
                 #Si la date de mort prévue est après 2022, on ne l'initialise pas (on ne prédit pas le futur)
-                if (pers["ddm"] > 2022):
+                if (int(pers["ddm"]) > 2022):
                     pers["ddm"] = ""
             # Si pers n'a pas de ddn mais ddm : on la set a la ddm - [65,85]
             if(pers["ddn"] == "" and pers["ddm"] != ""):
@@ -291,8 +293,7 @@ def CompleteData(data):
 
 # -------------------------- Lancement du scraping -------------------------- #
 
-nom = "Leenhardt"
-def scrapDataFromUrl(url):
+def scrapDataFromUrl(url, nom):
     
     # for i in range(1):# Récupération du code source de chaque url correspondant à une personne
     urlDerAscendant = ""
@@ -313,15 +314,12 @@ def scrapDataFromUrl(url):
         data.append(getDataUrl(u))
     '''
     data = GetAllData(data, urlDerAscendant)
-    
-    print(data)
 
     data = CompleteData(data)
 
     with open('dataSet' + nom + '.json', 'w+') as outfile:
         json.dump(data, outfile)
 
-    print(len(data))
 
 
 
