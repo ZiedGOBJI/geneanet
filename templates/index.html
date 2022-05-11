@@ -6,59 +6,63 @@
     <meta charset=utf-8>
     <style id="plotly.js-style-global"></style>
     <style id="plotly.js-style-modebar-aa6ffc"></style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='index_style.css') }}">
     <!-- 
     <script type="module" src="{{ url_for('static', filename='moduletest.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('static', filename='mapList.js') }}"></script>
      -->
+    
 
 </head>
 <body>
-    <h1>Visualisation des déplacements avant le 20ème siècle</h1>        
-    <section id="selectData">
-        <div id ="DataScrap">
-            <p>Veuillez saisir le nom ou l'url de la personne choisie</p>
-            <form id="FormDataScrap" method="post" action=".">
-                <p>
-                    Nom : <input required name="nom" type="text" id="nom" placeholder="Nom"> *
-                </p>
-                <p>
-                    Url : <input name="url" type="text" id="url" placeholder="https://www.geneanet.com/...">
-                </p>
-                <input type="submit" value="Recupérer les données">
-            </form>
-            <p id="msgFormScrap"></p>
-            {% if msgForm %}
-            {{msgForm}}
-            {% endif %}
+    <div id = "titre_page">
+        <h1>Visualisation des déplacements avant le 20ème siècle</h1>        
+    </div>
 
-            
+    <div id = "interface">
+
+        <div id = "interface_utilisateur">
+            <section id="selectData">
+                <div id ="DataScrap">
+                    <p id = "titre_scrap">Veuillez saisir le nom ou l'url de la personne choisie</p>
+                    <form id="FormDataScrap" method="post" action=".">
+                        <p>
+                            Nom<input required name="nom" type="text" id="nom" placeholder="Nom">
+                        </p>
+                        <p>
+                            URL<input name="url" type="text" id="url" placeholder="https://www.geneanet.com/...">
+                        </p>
+                        <input type="submit" value="Recupérer les données">
+                    </form>
+                        
+
+                </div>
+
+                <div id="NavAccesMap">
+                    <p id = "titre_carte">Accès aux cartes déjà créées</p>
+                    <ul id="mapList">
+                        {% for item in subfolders %}
+                            <a  href="/{{ item }}"><li> {{ item }} </li></a>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </section>
         </div>
 
-        <div id="NavAccesMap">
-            <p>Accès aux cartes déjà créées</p>
-            <ul id="mapList">
-                {% for item in subfolders %}
-                    <a  href="/{{ item }}"><li> {{ item }} </li></a>
-                {% endfor %}
-            </ul>
-        </div>
-    </section>
+        <div id = "interface_carte">
+            <section>
+                {% if name %}
+                <p>Déplacements de la famille : {{name}} </p>
+                <div id="map">
+                    {% if name in subfolders %}
+                    {% include './map/' + name + '/Map' + name + '.html' %}
+                    {% endif %}
+                </div>
+                {%else %}
+                    <p id = "texte_absence_carte">Veuillez sélectionner une carte à afficher</p>
+                {% endif %}
 
-    <section>
-        {% if name %}
-        <p>{{name}} est séléctionné(e) </p>
-        <div id="map">
-            {% if name in subfolders %}
-            {% include './map/' + name + '/Map' + name + '.html' %}
-            {% endif %}
+            </section>
         </div>
-        {%else %}
-            <p>Pas de personne séléctionnée</p>
-        {% endif %}
-
-        
-        
-        
-        
-    </section>
+    </div>
 </body>

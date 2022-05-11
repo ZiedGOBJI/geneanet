@@ -118,7 +118,7 @@ def setDataFrameMap(data, annees):
 
   return pd.DataFrame(data_pers)
 
-def createMap(df):
+def createMap(df, name):
 
   # Évenements (naissances et morts)
   fig = px.scatter_geo(df, 
@@ -131,9 +131,11 @@ def createMap(df):
                       hover_name="etat",
                       hover_data={'lon':False, 'lat':False, 'etat':False, "datetime":False, "nom":True, "prenom":True, "ddn":True, "ddm":True, "ldn":True, "ldm":True, "url": True},
                       color="etat",
-                      title='Affichage des morts et des naissances')
+                      title='Déplacement de la famille : ' + name)
 
-  fig.update_layout(autosize=False, width=1000, height=1000)
+  fig.update_layout(autosize=False, width=1000, height=500, geo=dict(
+            projection_scale=10, #this is kind of like zoom
+            center=dict(lat=48.683569, lon=7.858726)))
   fig.update(layout_coloraxis_showscale=False)
 
 
@@ -147,7 +149,7 @@ def createMap(df):
                       hover_name="etat",
                       hover_data={'lon':False, 'lat':False,"etat":False, "datetime":False, "nom":True, "prenom":True, "ddn":True, "ddm":True, "ldn":True, "ldm":True, "url": True},
                       color="etat",
-                      title='Affichage des morts et des naissances')
+                      title='Déplacement de la famille : ' + name)
 
   fig.add_trace(fig2.data[0])
   return fig

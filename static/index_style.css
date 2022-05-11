@@ -1,0 +1,104 @@
+body {
+    background-color: red;
+    font-family: Gill Sans, sans-serif;
+}
+
+#interface_utilisateur {
+    background-color: blue;
+    width: 25%;
+    height: 625px;
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-right: 6px solid;
+}
+
+#DataScrap p {
+    text-align: center;
+}
+
+
+#FormDataScrap input[type=text] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+}
+
+#FormDataScrap input[type=submit] {
+    display: block;
+    background-color: #04AA6D;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    padding: 16px 32px;
+    text-decoration: none;
+    margin: auto;
+    cursor: pointer;
+}
+
+#interface {
+    display: flex;
+    background-color: green;
+    border-radius: 5px;
+}
+
+#titre_page {
+    text-align: center;
+}
+
+#titre_scrap {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+#titre_carte {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+#interface_carte {
+    flex-grow: 1;
+}
+
+#interface_carte p {
+    text-align: center;
+}
+
+#NavAccesMap p {
+    text-align: center;
+}
+
+#NavAccesMap ul {
+    height: 273px;
+    list-style: none;
+    padding:0;
+    margin:0;
+    overflow:hidden; 
+    overflow-y:scroll;
+}
+
+#NavAccesMap a {
+    color:black; 
+    text-decoration:none;
+}
+
+#NavAccesMap li {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: 40px;
+    text-decoration: none;
+    background-color: blueviolet;
+    border: 1px solid;
+    border-radius: 3px;
+    margin: 3px;
+}
+
+#texte_absence_carte {
+    text-align: center;
+}
+
+#map {
+    padding-left: 6%;
+}
