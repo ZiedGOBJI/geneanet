@@ -118,6 +118,67 @@ def setDataFrameMap(data, annees):
 
   return pd.DataFrame(data_pers)
 
+def setDataFrameMapPop(data, annees):
+  geocoder = getGeocoder()
+  data_pers = initializeDataPers()
+  # on set les clés des dict (ce sont les années), on ne s'intéresse qu'à l'intervalle [année min, année max]
+  # set les valeurs des clés des lat et long
+  c = 0
+  lendata = len(data)
+  for dict in data:
+    print(str(round(((data.index(dict)*100)/lendata),2)) + "%")
+    ville_naissance = ""
+    try:
+      if(dict["ldn"] != ""):
+        ville_naissance = geocoder.geocode(dict["ldn"])
+    except:
+      pass
+
+    # introduction d'un bruitx et d'un bruity afin d'empêcher la superposition des individus
+    for k in range(int(min(annees)),int(max(annees))+1):
+      data_pers["datetime"][c] = str(k)
+      data_pers["etat"][c] = ""
+
+      try:
+        if(k >= int(dict["ddn"])):
+          data_pers["lat"][c] = str(ville_naissance.latitude)
+          data_pers["lon"][c] = str(ville_naissance.longitude)
+          data_pers["etat"][c] = "Naissance"
+          #print(dict["ldn"] + " : " + str(ville_naissance.latitude) + " " + str(ville_naissance.longitude))
+      except:
+        ""
+
+      data_pers["ldn"][c] = dict["ldn"]
+      data_pers["ddn"][c] = dict["ddn"]
+
+      c+=1
+
+  for k in range(int(min(annees)),int(max(annees))+1):
+    ""
+
+  return pd.DataFrame(data_pers)
+
+def createMapPop(df, name):
+
+  # Évenements (naissances et morts)
+  fig = px.scatter_geo(df, 
+                      lat='lat', 
+                      lon='lon', 
+                      scope='world',
+                      projection="mercator", 
+                      animation_frame="datetime",
+                      animation_group="etat",
+                      hover_name="etat",
+                      hover_data={'lon':False, 'lat':False, 'etat':False, "datetime":False, "nom":True, "prenom":True, "ddn":True, "ddm":True, "ldn":True, "ldm":True, "url": True},
+                      color="etat",
+                      title='Déplacement de la famille : ' + name)
+
+  fig.update_layout(autosize=False, width=1000, height=500, geo=dict(
+            projection_scale=10, #this is kind of like zoom
+            center=dict(lat=48.683569, lon=7.858726)))
+  fig.update(layout_coloraxis_showscale=False)
+  return fig
+
 def createMap(df, name):
 
   # Évenements (naissances et morts)
@@ -163,7 +224,7 @@ def mainMap(dataName):
   
   df = setDataFrameMap(data, annees)
   
-  fig = createMap(df)
+  fig = createMap(df, dataName)
   saveMap(fig, dataName)
 
 def test():
@@ -176,7 +237,7 @@ def test():
                         hover_name="country", size="pop",
                         animation_frame="year", projection="natural earth")
 
-    fig.update_layout(autosize=False, width=1000, height=1000)
+    fig.update_layout(autosize=False, width=1000, height=500)
     fig.update(layout_coloraxis_showscale=False)
 
     fig.write_html("./test.html")

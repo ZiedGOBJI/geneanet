@@ -1,41 +1,38 @@
-from time import sleep
 from flask import Flask, render_template, request
-import subprocess as sp
+import os
+
 import scrapData as sd
 import map
-
-import os
-from os.path import isfile, join
-
-from threading import Thread
 
 app = Flask(__name__)
 
 def getSubfolder():
     return [os.path.basename(f.path) for f in os.scandir("./templates/map/") if f.is_dir()] 
 
-def threadScrap(nom, url):
+def threadScrap(name, url):
     msg = "Récupération des données"
     if(url == ""):
-        url = sd.traitementURL(nom)
+        url = sd.traitementURL(name)
         print(url)
         url = sd.getArbreUrl(url)
 
-    thrMap = Thread(target=threadMap,args=[nom])
+    sd.scrapDataFromUrl(url)
+    thrMap = Thread(target=threadMap,args=[name])
     thrMap.start()
 
-    return render_template("index.html", name=nom, subfolders=getSubfolder(), msgForm=msg)
+    return render_template("index.html", name=name, subfolders=getSubfolder(), msgForm=msg)
 
-def threadMap(nom):
+def threadMap(name):
     msg = "Création de la carte"
     try:
-        os.mkdir("./templates/map/" + nom)
+        os.mkdir("./templates/map/" + name)
     except:
         pass
 
-    map.mainMap(nom)
+    map.mainMap(name)
     
-    return render_template("index.html", name=nom, subfolders=getSubfolder(), msgForm=msg)
+    return render_template("index.html", name=name, subfolders=getSubfolder(), msgForm=msg)
+
 
 @app.route('/')
 def index():
@@ -43,26 +40,39 @@ def index():
 
 @app.route("/", methods = ['POST'])
 def scrapData():
-    nom = request.form["nom"]
+    name = request.form["nom"]
     url = request.form["url"]
-    msg = ""
 
-    print(nom)
+    name = name.capitalize()
+
+    print(name)
     print(url)
-    if(nom != ""):
-        nom = nom.capitalize()
-        msg = "Début récupération des données"
-        
-        thr = Thread(target=threadScrap, args=[nom, url])
-        thr.start()
-    else:
-        msg = "Pas de nom renseigné"
     
-    return render_template("index.html", name=nom, subfolders=getSubfolder(), msgForm=msg)
+    if(name != ""):
+        if(url == ""):
+            url = sd.traitementURL(name)
+            print(url)
+            url = sd.getArbreUrl(url)
+
+        sd.scrapDataFromUrl(url, name)
+
+        try:
+            os.mkdir("./templates/map/" + name)
+        except:
+            pass
+
+        map.mainMap(name)
+
+        return render_template("index.html", name=name, subfolders=getSubfolder())
+    else:
+        return render_template("index.html", name=name, subfolders=getSubfolder())
+
 
 @app.route('/<name>')
 def displayMap(name = ""):
-  return render_template('index.html', name=name, subfolders=getSubfolder())
+    if(name in getSubfolder()):
+        return render_template('index.html', name=name, subfolders=getSubfolder())
+    return render_template('index.html', subfolders=getSubfolder())
 
 
 @app.errorhandler(404)

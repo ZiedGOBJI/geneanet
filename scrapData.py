@@ -294,25 +294,13 @@ def CompleteData(data):
 # -------------------------- Lancement du scraping -------------------------- #
 
 def scrapDataFromUrl(url, nom):
-    
-    # for i in range(1):# Récupération du code source de chaque url correspondant à une personne
     urlDerAscendant = ""
-    #url = "https://gw.geneanet.org/jgcuaz?n=martin&oc=2&p=balthasard"
-    # url = "https://gw.geneanet.org/leenhardt?n=leenhardt&oc=&p=micheline"
-    # url = "https://gw.geneanet.org/dulaurentdelaba?n=bonaparte&oc=&p=napoleon+1er"
     print("url de base : " + url)
     data = []
-    urls = []
     
     urlDerAscendant = getUrlDerAscendant(url)
     print("Url dernier ascendant : " + urlDerAscendant)
-    '''
-    urls = getAllUrls(urls, urlDerAscendant)
-    print(len(urls))
     
-    for u in urls:
-        data.append(getDataUrl(u))
-    '''
     data = GetAllData(data, urlDerAscendant)
 
     data = CompleteData(data)
