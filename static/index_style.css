@@ -1,10 +1,10 @@
 body {
-    background-color: red;
+    background-color: #EEEDED;
     font-family: Gill Sans, sans-serif;
 }
 
 #interface_utilisateur {
-    background-color: blue;
+    background-color: #6BA5DE;
     width: 25%;
     height: 625px;
     border-top-left-radius: 5px;
@@ -26,7 +26,7 @@ body {
 
 #FormDataScrap input[type=submit] {
     display: block;
-    background-color: #04AA6D;
+    background-color: #006DD8;
     border: none;
     border-radius: 4px;
     color: white;
@@ -38,7 +38,7 @@ body {
 
 #interface {
     display: flex;
-    background-color: green;
+    background-color: #6BA5DE;
     border-radius: 5px;
 }
 
@@ -89,7 +89,7 @@ body {
     justify-content: center;
     height: 40px;
     text-decoration: none;
-    background-color: blueviolet;
+    background-color: #006DD8;
     border: 1px solid;
     border-radius: 3px;
     margin: 3px;
@@ -100,5 +100,19 @@ body {
 }
 
 #map {
+    padding-top: 40px;
     padding-left: 6%;
+}
+
+#sablier {
+    width: 50px;
+    height: 50px;
+    /*padding-left: 10px;*/
+    padding-right: 35px;
+    display: none;
+}
+
+#button_sab {
+    display: flex;
+    justify-content: flex-end;
 }

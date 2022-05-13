@@ -194,7 +194,7 @@ def createMap(df, name):
                       color="etat",
                       title='Déplacement de la famille : ' + name)
 
-  fig.update_layout(autosize=False, width=1000, height=500, geo=dict(
+  fig.update_layout(autosize=False, width=1000, height=550, geo=dict(
             projection_scale=10, #this is kind of like zoom
             center=dict(lat=48.683569, lon=7.858726)))
   fig.update(layout_coloraxis_showscale=False)
@@ -242,3 +242,5 @@ def test():
 
     fig.write_html("./test.html")
     fig.show()
+
+#mainMap("Kevin")

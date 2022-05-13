@@ -7,6 +7,14 @@
     <style id="plotly.js-style-global"></style>
     <style id="plotly.js-style-modebar-aa6ffc"></style>
     <link rel="stylesheet" href="{{ url_for('static', filename='index_style.css') }}">
+
+    <script>
+        function displaySab(){
+            console.log("Ca s'exécute")
+            document.getElementById("sablier").style.display = "flex";
+        }
+    </script>
+
 </head>
 <body>
     <div id = "titre_page">
@@ -25,9 +33,12 @@
                         <p>
                             URL<input name="url" type="text" id="url" placeholder="https://www.geneanet.com/...">
                         </p>
-                        <input type="submit" value="Recupérer les données">
+                        <div id = "button_sab">
+                            <input type="submit" value="Recupérer les données" onclick="displaySab()">
+                            <img id = "sablier" src = "{{ url_for('static', filename='images/sablier.png') }}">
+                        </div>
                     </form>
-                        
+                    
 
                 </div>
 
@@ -45,7 +56,6 @@
         <div id = "interface_carte">
             <section>
                 {% if name %}
-                <p>Déplacements de la famille : {{name}} </p>
                 <div id="map">
                     {% if name in subfolders %}
                     {% include './map/' + name + '/Map' + name + '.html' %}
