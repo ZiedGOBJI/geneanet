@@ -120,43 +120,60 @@ def setDataFrameMap(data, annees):
 
 def setDataFrameMapPop(data, annees):
   geocoder = getGeocoder()
-  data_pers = initializeDataPers()
+  
+  data_pers = {}
+  data_pers["datetime"] = {}
+  data_pers["size"] = {}
+  data_pers["lat"] = {}
+  data_pers["lon"] = {}
+  data_pers["lieu"] = {}
+  
+
   # on set les clés des dict (ce sont les années), on ne s'intéresse qu'à l'intervalle [année min, année max]
   # set les valeurs des clés des lat et long
   c = 0
   lendata = len(data)
+  allcity = {}
   for dict in data:
-    print(str(round(((data.index(dict)*100)/lendata),2)) + "%")
-    ville_naissance = ""
+    
     try:
       if(dict["ldn"] != ""):
-        ville_naissance = geocoder.geocode(dict["ldn"])
+        ville = geocoder.geocode(dict["ldn"])
+        print(allcity.keys())
+        print(ville.latitude)
+        print(str(ville.latitude) + " " + str(ville.longitude) not in list(allcity.keys()))
+        if(str(ville.latitude) + " " + str(ville.longitude) not in list(allcity.keys())):
+          allcity[str(ville.latitude) + " " + str(ville.longitude)] = []
+        allcity[str(ville.latitude) + " " + str(ville.longitude)].append(int(dict["ddn"]))
     except:
       pass
+  
+  print(allcity)
 
-    # introduction d'un bruitx et d'un bruity afin d'empêcher la superposition des individus
+  for city in allcity:
+    
     for k in range(int(min(annees)),int(max(annees))+1):
-      data_pers["datetime"][c] = str(k)
-      data_pers["etat"][c] = ""
-
-      try:
-        if(k >= int(dict["ddn"])):
-          data_pers["lat"][c] = str(ville_naissance.latitude)
-          data_pers["lon"][c] = str(ville_naissance.longitude)
-          data_pers["etat"][c] = "Naissance"
-          #print(dict["ldn"] + " : " + str(ville_naissance.latitude) + " " + str(ville_naissance.longitude))
-      except:
-        ""
-
-      data_pers["ldn"][c] = dict["ldn"]
-      data_pers["ddn"][c] = dict["ddn"]
-
-      c+=1
-
-  for k in range(int(min(annees)),int(max(annees))+1):
-    ""
+      first = True
+      if(k in allcity[city]):
+        data_pers["datetime"][c] = str(k)
+        data_pers["size"][c] = 0
+        try:
+          if(k >= int(dict["ddn"])):
+            data_pers["lat"][c] = str(ville.latitude)
+            data_pers["lon"][c] = str(ville.longitude)
+            if(first):
+              data_pers["lieu"][c] = dict["ldn"]
+              data_pers["size"][c] = 0
+              first = False
+            else:
+              data_pers["size"][c] = data_pers["size"][c-1] + 1
+            #print(dict["ldn"] + " : " + str(ville_naissance.latitude) + " " + str(ville_naissance.longitude))
+        except:
+          pass
+        c+=1
 
   return pd.DataFrame(data_pers)
+
 
 def createMapPop(df, name):
 
@@ -167,10 +184,9 @@ def createMapPop(df, name):
                       scope='world',
                       projection="mercator", 
                       animation_frame="datetime",
-                      animation_group="etat",
-                      hover_name="etat",
-                      hover_data={'lon':False, 'lat':False, 'etat':False, "datetime":False, "nom":True, "prenom":True, "ddn":True, "ddm":True, "ldn":True, "ldm":True, "url": True},
-                      color="etat",
+                      hover_name="lieu",
+                      hover_data={'lon':False, 'lat':False, "datetime":False, "lieu":True, "size":True},
+                      size="size",
                       title='Déplacement de la famille : ' + name)
 
   fig.update_layout(autosize=False, width=1000, height=500, geo=dict(
@@ -217,6 +233,9 @@ def createMap(df, name):
 
 def saveMap(fig, dataName):
   fig.write_html("./templates/map/" + dataName + "/Map" + dataName + ".html")
+
+def saveMapPop(fig, dataName):
+  fig.write_html("./templates/map/" + dataName + "/MapPop" + dataName + ".html")
   
 def mainMap(dataName):
   data = getJsonData(dataName)
@@ -226,6 +245,16 @@ def mainMap(dataName):
   
   fig = createMap(df, dataName)
   saveMap(fig, dataName)
+
+def testPop():
+  name = "Martin"
+  data = getJsonData(name)
+  annees = findYearMinMax(data)
+
+  df = setDataFrameMapPop(data, annees)
+    
+  fig = createMapPop(df, name)
+  saveMapPop(fig, name)
 
 def test():
     # geocoder = Nominatim(user_agent="http")
@@ -243,4 +272,4 @@ def test():
     fig.write_html("./test.html")
     fig.show()
 
-#mainMap("Kevin")
+# mainMap("Kevin")
